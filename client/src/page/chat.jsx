@@ -1,6 +1,6 @@
-import React, { useEffect, useReducer, useRef } from "react";
+import React, { useEffect, useReducer, useRef, useState } from "react";
 import { Reload, Rocket, Stop } from "../assets";
-import { Chat, New } from "../components";
+import { Chat, New, ModelSelector } from "../components";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { setLoading } from "../redux/loading";
 import { useDispatch, useSelector } from "react-redux";
@@ -38,7 +38,7 @@ const reducer = (state, { type, status }) => {
   }
 };
 
-const Main = () => {
+const Main = ({ currentModel, setCurrentModel }) => {
   let location = useLocation();
 
   const navigate = useNavigate();
@@ -96,13 +96,54 @@ const Main = () => {
     }
   }, [location]);
 
+  const handleSubmit = async (prompt) => {
+    try {
+      const response = await instance.post("/api/chat/", {
+        prompt,
+        model: currentModel
+      });
+    } catch (err) {
+      console.log(err);
+      if (err?.response?.data?.status === 405) {
+        dispatch(emptyUser());
+        dispatch(emptyAllRes());
+        navigate("/login");
+      } else {
+        stateAction({ type: "error", status: true });
+      }
+    } finally {
+      if (response?.data) {
+        const { _id, content } = response?.data?.data;
+
+        dispatch(insertNew({ _id, fullContent: content, chatsId }));
+
+        chatRef?.current?.loadResponse(stateAction, content, chatsId);
+
+        stateAction({ type: "error", status: false });
+      }
+    }
+  };
+
   return (
     <div className="main">
       <div className="contentArea">
-        {status.chat ? <Chat ref={chatRef} error={status.error} /> : <New />}
+        {status.chat ? (
+          <Chat 
+            ref={chatRef} 
+            error={status.error}
+            currentModel={currentModel}
+          />
+        ) : (
+          <New />
+        )}
       </div>
 
-      <InputArea status={status} chatRef={chatRef} stateAction={stateAction} />
+      <InputArea 
+        status={status} 
+        chatRef={chatRef} 
+        stateAction={stateAction}
+        currentModel={currentModel}
+      />
     </div>
   );
 };
@@ -110,7 +151,7 @@ const Main = () => {
 export default Main;
 
 //Input Area
-const InputArea = ({ status, chatRef, stateAction }) => {
+const InputArea = ({ status, chatRef, stateAction, currentModel }) => {
   let textAreaRef = useRef();
 
   const navigate = useNavigate();
@@ -130,11 +171,11 @@ const InputArea = ({ status, chatRef, stateAction }) => {
   const FormHandle = async () => {
     if (prompt?.length > 0) {
       stateAction({ type: "chat", status: true });
-
       let chatsId = Date.now();
 
       dispatch(insertNew({ id: chatsId, content: "", prompt }));
       chatRef?.current?.clearResponse();
+      dispatch(livePrompt(""));
 
       let res = null;
 
@@ -143,10 +184,12 @@ const InputArea = ({ status, chatRef, stateAction }) => {
           res = await instance.put("/api/chat", {
             chatId: _id,
             prompt,
+            model: currentModel
           });
         } else {
           res = await instance.post("/api/chat", {
             prompt,
+            model: currentModel
           });
         }
       } catch (err) {
@@ -261,9 +304,9 @@ const InputArea = ({ status, chatRef, stateAction }) => {
       <div className="text">
         <a
           target="_blank"
-          href="https://help.openai.com/en/articles/6825453-chatgpt-release-notes"
+          href="https://help.signaltech.xyz/en/articles/6825453-chatgpt-release-notes"
         >
-          ChatGPT Mar 14 Version.
+          ChatAPP Mar 0.1 Version.
         </a>{" "}
         Free Research Preview. Our goal is to make AI systems more natural and
         safe to interact with. Your feedback will help us improve.

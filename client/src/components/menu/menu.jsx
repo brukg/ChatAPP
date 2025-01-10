@@ -4,12 +4,13 @@ import {
 } from '../../assets/'
 import { emptyUser } from '../../redux/user'
 import { useDispatch, useSelector } from 'react-redux'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { activePage, addHistory } from '../../redux/history'
 import instance from '../../config/instance'
+import { ModelSelector } from '..'
 import './style.scss'
 
-const Menu = ({ changeColorMode }) => {
+const Menu = ({ changeColorMode, currentModel, onModelChange }) => {
   let path = window.location.pathname
 
   const menuRef = useRef(null)
@@ -123,18 +124,20 @@ const Menu = ({ changeColorMode }) => {
         settingRef={settingRef}
       />
 
-      <header >
+      <header>
         <div className='start'>
           <button onClick={showMenuMd} ref={btnRef}><Bar /></button>
         </div>
 
         <div className='title'>
-          {
-            path.length > 6 ? history[0]?.prompt : 'New chat'
-          }
+          {path.length > 6 ? history[0]?.prompt : 'New chat'}
         </div>
 
         <div className='end'>
+          <ModelSelector 
+            currentModel={currentModel}
+            onModelChange={onModelChange}
+          />
           <button onClick={() => {
             if (path.includes('/chat')) {
               navigate('/')
@@ -207,7 +210,7 @@ const Menu = ({ changeColorMode }) => {
             }
           }} ><Settings />Settings</button>
           <button onClick={() => {
-            window.open('https://help.openai.com/en/collections/3742473-chatgpt', '_blank')
+            window.open('https://help.signaltech.xyz/', '_blank')
           }}><Tab />Get help</button>
           <button onClick={logOut} >
             <LogOut />Log out

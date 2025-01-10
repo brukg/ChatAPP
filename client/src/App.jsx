@@ -8,6 +8,7 @@ import Loading from "./components/loading/loading";
 
 const App = () => {
   const [offline, setOffline] = useState(!window.navigator.onLine);
+  const [currentModel, setCurrentModel] = useState('deepseek_T');
 
   const { loading, user } = useSelector((state) => state);
 
@@ -36,20 +37,27 @@ const App = () => {
 
   // Offline
   useEffect(() => {
-    window.addEventListener("online", (e) => {
-      location.reload();
-    });
+    const handleOnline = () => setOffline(false);
+    const handleOffline = () => setOffline(true);
 
-    window.addEventListener("offline", (e) => {
-      setOffline(true);
-    });
-  });
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   return (
     <section className={user ? "main-grid" : null}>
       {user && (
         <div>
-          <Menu changeColorMode={changeColorMode} />
+          <Menu 
+            changeColorMode={changeColorMode} 
+            currentModel={currentModel}
+            onModelChange={setCurrentModel}
+          />
         </div>
       )}
 
@@ -64,9 +72,24 @@ const App = () => {
 
       <Routes>
         <Route element={<ProtectedRoute offline={offline} authed={true} />}>
-          <Route exact path="/" element={<Main />} />
-          <Route path="/chat" element={<Main />} />
-          <Route path="/chat/:id" element={<Main />} />
+          <Route exact path="/" element={
+            <Main 
+              currentModel={currentModel} 
+              setCurrentModel={setCurrentModel}
+            />
+          } />
+          <Route path="/chat" element={
+            <Main 
+              currentModel={currentModel} 
+              setCurrentModel={setCurrentModel}
+            />
+          } />
+          <Route path="/chat/:id" element={
+            <Main 
+              currentModel={currentModel} 
+              setCurrentModel={setCurrentModel}
+            />
+          } />
         </Route>
 
         <Route element={<ProtectedRoute offline={offline} />}>

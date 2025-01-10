@@ -73,7 +73,7 @@ const Signup = () => {
             <div className="bottum">
               <div className="start">
                 <a
-                  href="https://openai.com/policies/terms-of-use"
+                  href="https://signaltech.xyz/policies/terms-of-use"
                   target="_blank"
                 >
                   Terms of use
@@ -81,7 +81,7 @@ const Signup = () => {
               </div>
               <div className="end">
                 <a
-                  href="https://openai.com/policies/privacy-policy"
+                  href="https://signaltech.xyz/policies/privacy-policy"
                   target="_blank"
                 >
                   Privacy Policy

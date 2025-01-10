@@ -1,0 +1,41 @@
+.model-selector {
+  select {
+    padding: 0.5rem;
+    border-radius: 6px;
+    border: 1px solid #30373d;
+    background: #202123;
+    color: #fff;
+    font-size: 0.875rem;
+    cursor: pointer;
+    
+    &:focus {
+      outline: none;
+      border-color: #565869;
+    }
+
+    option {
+      background: #202123;
+      color: #fff;
+    }
+  }
+}
+
+// Light mode styles
+.light .model-selector select {
+  background: #fff;
+  border-color: #e5e5e5;
+  color: #000;
+
+  option {
+    background: #fff;
+    color: #000;
+  }
+}
+
+// Mobile responsive styles
+@media (max-width: 768px) {
+  .model-selector select {
+    padding: 0.4rem;
+    font-size: 0.8rem;
+  }
+} 

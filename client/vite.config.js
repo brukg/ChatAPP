@@ -7,8 +7,9 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "http://localhost:5000/api",
+        target: "http://localhost:5000",
         changeOrigin: true,
+        secure: false,
         rewrite: (path) => path.replace(/^\/api/, ""),
       },
     },
@@ -25,9 +26,9 @@ export default defineConfig({
         display: "fullscreen",
         scope: "/",
         start_url: "/",
-        name: "ChatGPT",
-        short_name: "ChatGPT",
-        description: "ChatGPT OpenAI",
+        name: "ChatAPP",
+        short_name: "ChatAPP",
+        description: "ChatAPP",
         icons: [
           {
             src: "/manifest/icon-192x192.png",

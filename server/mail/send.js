@@ -4,7 +4,9 @@ import dotnet from 'dotenv'
 dotnet.config()
 
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: process.env.SMTP_HOST,
+    port: process.env.SMTP_PORT,
+    secure: process.env.SMTP_SECURE === 'true',
     auth: {
         user: process.env.MAIL_EMAIL,
         pass: process.env.MAIL_SECRET
@@ -13,7 +15,7 @@ const transporter = nodemailer.createTransport({
 
 export default ({ to, subject, html }) => {
     var options = {
-        from: `OpenAI <${process.env.MAIL_EMAIL}>`,
+        from: `SignalTech <${process.env.MAIL_EMAIL}>`,
         to,
         subject,
         html

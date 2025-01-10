@@ -45,8 +45,8 @@ const Login = () => {
             </div>
 
             <div>
-              <p>Welcome to ChatGPT</p>
-              <p>Log in with your OpenAI account to continue</p>
+              <p>Welcome to ChatAPP</p>
+              <p>Log in with your account to continue</p>
             </div>
 
             <div className="btns">
@@ -70,13 +70,13 @@ const Login = () => {
 
         <div className="bottum">
           <div className="start">
-            <a href="https://openai.com/policies/terms-of-use" target="_blank">
+            <a href="https://signaltech.xyz/policies/terms-of-use" target="_blank">
               Terms of use
             </a>
           </div>
           <div className="end">
             <a
-              href="https://openai.com/policies/privacy-policy"
+              href="https://signaltech.xyz/policies/privacy-policy"
               target="_blank"
             >
               Privacy Policy

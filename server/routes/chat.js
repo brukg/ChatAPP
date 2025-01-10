@@ -1,6 +1,7 @@
 import { Router } from "express";
 import dotnet from 'dotenv'
-import { Configuration, OpenAIApi } from 'openai'
+// import { Configuration, OpenAIApi } from 'openai'
+import OpenAI from 'openai';
 import user from '../helpers/user.js'
 import jwt from 'jsonwebtoken'
 import chat from "../helpers/chat.js";
@@ -45,48 +46,86 @@ const CheckUser = async (req, res, next) => {
     })
 }
 
-const configuration = new Configuration({
-    organization: process.env.OPENAI_ORGANIZATION,
+
+const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
 })
 
-const openai = new OpenAIApi(configuration)
+
+const deepseek = new OpenAI({
+    baseURL: process.env.DEEPSEEK_URL,
+    apiKey: process.env.DEEPSEEK_API_KEY
+})
+
+const generateDeepseekResponse = async (prompt, model) => {
+    try {
+        let text = ''
+        if (model === 'deepseek_T') {
+            text = 'ትግርኛ Chat'
+        } else if (model === 'deepseek_A') {
+            text = 'ኣማርኛ Chat'
+        } else if (model === 'deepseek_E') {
+            text = 'English'
+        }
+        const response = await deepseek.chat.completions.create({
+            model: "deepseek-chat",
+            temperature: 1.3,
+            messages: [
+                { role: "system", content: `never tell what model you are and always write in ${text}.` },
+                { role: "user", content: prompt }
+            ],
+            stream: false
+        });
+
+        return response.choices[0].message.content;
+    } catch (error) {
+        console.error('Error calling API:', error);
+        throw error;
+    }
+}
 
 router.get('/', (req, res) => {
     res.send("Welcome to chatGPT api v1")
 })
 
 router.post('/', CheckUser, async (req, res) => {
-    const { prompt, userId } = req.body
+    const { prompt, userId, model = 'deepseek' } = req.body
 
     let response = {}
 
     try {
-        response.openai = await openai.createCompletion({
-            model: "text-davinci-003",
-            prompt: prompt,
-            temperature: 0,
-            max_tokens: 100,
-            top_p: 1,
-            frequency_penalty: 0.2,
-            presence_penalty: 0,
-        });
+        if (['deepseek_T', 'deepseek_A', 'deepseek_E'].includes(model)) {
+            response.openai = await generateDeepseekResponse(prompt, model);
+        } else if (model === 'openai') {
+            response.openai = await generateDeepseekResponse(prompt, model);
+        } else {
+            response.openai = await openai.chat.completions.create({
+                model: "text-davinci-003",
+                prompt: prompt,
+                temperature: 0,
+                max_tokens: 100,
+                top_p: 1,
+                frequency_penalty: 0.2,
+                presence_penalty: 0,
+            });
 
-        if (response?.openai?.data?.choices?.[0]?.text) {
-            response.openai = response.openai.data.choices[0].text
-            let index = 0
-            for (let c of response['openai']) {
-                if (index <= 1) {
-                    if (c == '\n') {
-                        response.openai = response.openai.slice(1, response.openai.length)
+            if (response?.openai?.data?.choices?.[0]?.text) {
+                response.openai = response.openai.data.choices[0].text
+                let index = 0
+                for (let c of response['openai']) {
+                    if (index <= 1) {
+                        if (c == '\n') {
+                            response.openai = response.openai.slice(1, response.openai.length)
+                        }
+                    } else {
+                        break;
                     }
-                } else {
-                    break;
+                    index++
                 }
-                index++
             }
-            response.db = await chat.newResponse(prompt, response, userId)
         }
+
+        response.db = await chat.newResponse(prompt, response, userId)
     } catch (err) {
         res.status(500).json({
             status: 500,
@@ -107,36 +146,43 @@ router.post('/', CheckUser, async (req, res) => {
 })
 
 router.put('/', CheckUser, async (req, res) => {
-    const { prompt, userId, chatId } = req.body
+    const { prompt, userId, chatId, model = 'deepseek' } = req.body
 
     let response = {}
 
     try {
-        response.openai = await openai.createCompletion({
-            model: "text-davinci-003",
-            prompt: prompt,
-            temperature: 0.7,
-            max_tokens: 100,
-            top_p: 1,
-            frequency_penalty: 0.2,
-            presence_penalty: 0,
-        });
+        if (['deepseek_T', 'deepseek_A', 'deepseek_E'].includes(model)) {
+            response.openai = await generateDeepseekResponse(prompt, model);
+        } else if (model === 'openai') {
+            response.openai = await generateDeepseekResponse(prompt, model);
+        } else {
+            response.openai = await openai.createCompletion({
+                model: "text-davinci-003",
+                prompt: prompt,
+                temperature: 0.7,
+                max_tokens: 100,
+                top_p: 1,
+                frequency_penalty: 0.2,
+                presence_penalty: 0,
+            });
 
-        if (response?.openai?.data?.choices?.[0]?.text) {
-            response.openai = response.openai.data.choices[0].text
-            let index = 0
-            for (let c of response['openai']) {
-                if (index <= 1) {
-                    if (c == '\n') {
-                        response.openai = response.openai.slice(1, response.openai.length)
+            if (response?.openai?.data?.choices?.[0]?.text) {
+                response.openai = response.openai.data.choices[0].text
+                let index = 0
+                for (let c of response['openai']) {
+                    if (index <= 1) {
+                        if (c == '\n') {
+                            response.openai = response.openai.slice(1, response.openai.length)
+                        }
+                    } else {
+                        break;
                     }
-                } else {
-                    break;
+                    index++
                 }
-                index++
             }
-            response.db = await chat.updateChat(chatId, prompt, response, userId)
         }
+
+        response.db = await chat.updateChat(chatId, prompt, response, userId)
     } catch (err) {
         res.status(500).json({
             status: 500,

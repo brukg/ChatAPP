@@ -74,13 +74,13 @@ const Forgot = () => {
 
         <div className="bottum">
           <div className="start">
-            <a href="https://openai.com/policies/terms-of-use" target="_blank">
+            <a href="https://signaltech.xyz/policies/terms-of-use" target="_blank">
               Terms of use
             </a>
           </div>
           <div className="end">
             <a
-              href="https://openai.com/policies/privacy-policy"
+              href="https://signaltech.xyz/policies/privacy-policy"
               target="_blank"
             >
               Privacy Policy

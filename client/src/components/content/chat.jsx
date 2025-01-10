@@ -6,12 +6,13 @@ import React, {
 import { useDispatch, useSelector } from 'react-redux'
 import { GptIcon } from '../../assets'
 import { insertNew } from '../../redux/messages'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import './style.scss'
+import instance from '../../config/instance'
 
-const Chat = forwardRef(({ error }, ref) => {
-
+const Chat = forwardRef(({ error, currentModel }, ref) => {
   const dispatch = useDispatch()
-
   const contentRef = useRef()
 
   const { user, messages } = useSelector((state) => state)
@@ -43,7 +44,6 @@ const Chat = forwardRef(({ error }, ref) => {
         stopResponse(stateAction)
       }
     }, 20)
-
   }
 
   const stopResponse = (stateAction) => {
@@ -53,6 +53,25 @@ const Chat = forwardRef(({ error }, ref) => {
     stateAction({ type: 'resume', status: false })
     clearInterval(window.interval)
   }
+
+  const handleContinue = async (prompt, chatId) => {
+    try {
+      const response = await instance.put("/api/chat/", {
+        prompt,
+        chatId,
+        model: currentModel
+      });
+      
+      if (response?.data) {
+        const { content } = response?.data?.data;
+        dispatch(insertNew({ fullContent: content, chatsId: chatId }));
+        loadResponse(stateAction, content, chatId);
+      }
+    } catch (err) {
+      console.error(err);
+      stateAction({ type: "error", status: true });
+    }
+  };
 
   useImperativeHandle(ref, () => ({
     stopResponse,
@@ -87,9 +106,27 @@ const Chat = forwardRef(({ error }, ref) => {
                   <GptIcon />
                 </div>
                 <div className='txt'>
-                  <span>
+                  <ReactMarkdown 
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      code({node, inline, className, children, ...props}) {
+                        const match = /language-(\w+)/.exec(className || '')
+                        return !inline ? (
+                          <pre className={className}>
+                            <code {...props}>
+                              {children}
+                            </code>
+                          </pre>
+                        ) : (
+                          <code className={className} {...props}>
+                            {children}
+                          </code>
+                        )
+                      }
+                    }}
+                  >
                     {obj?.content}
-                  </span>
+                  </ReactMarkdown>
                 </div>
               </div>
             </Fragment>
@@ -117,7 +154,7 @@ const Chat = forwardRef(({ error }, ref) => {
               <div className='txt'>
                 {
                   error ? <div className="error">
-                    Something went wrong. If this issue persists please contact us through our help center at help.openai.com.
+                    Something went wrong. If this issue persists please contact us through our help center at help.signaltech.xyz.
                   </div> : <span ref={contentRef} className="blink" />
                 }
               </div>
@@ -128,4 +165,5 @@ const Chat = forwardRef(({ error }, ref) => {
     </div>
   )
 })
+
 export default Chat
